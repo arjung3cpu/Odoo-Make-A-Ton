@@ -1,0 +1,274 @@
+
+/* =================================
+   SUBSCRIPT - GLOBAL THEME SYSTEM
+================================= */
+
+:root {
+    color-scheme: light;
+
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #172033;
+    --muted: #64748b;
+    --border: #e7eaf0;
+    --sidebar: #111827;
+    --input-bg: #ffffff;
+    --hover: #eef2f8;
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --bg: #0b1120;
+    --card: #151f32;
+    --text: #e5e7eb;
+    --muted: #a1aec1;
+    --border: #29364b;
+    --sidebar: #080d18;
+    --input-bg: #101a2b;
+    --hover: #202d43;
+}
+
+/* =================================
+   BODY AND MAIN LAYOUT
+================================= */
+
+html, body {
+    min-height: 100%;
+}
+
+body {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    transition: background 0.25s, color 0.25s;
+}
+
+main {
+    background: var(--bg);
+    color: var(--text);
+    min-height: calc(100vh - 56px);
+}
+
+/* =================================
+   NAVBAR
+================================= */
+
+.navbar {
+    background: #111827 !important;
+}
+
+.navbar-brand {
+    letter-spacing: 0.3px;
+}
+
+/* =================================
+   SIDEBAR
+================================= */
+
+.sidebar {
+    min-height: calc(100vh - 56px);
+    background: var(--sidebar) !important;
+}
+
+.side-link {
+    display: block;
+    color: #cbd5e1;
+    text-decoration: none;
+    padding: 11px 14px;
+    border-radius: 9px;
+    margin-bottom: 4px;
+    transition: background 0.2s;
+}
+
+.side-link:hover {
+    background: #273449;
+    color: #ffffff;
+}
+
+/* =================================
+   CARDS
+================================= */
+
+.card,
+.stat-card {
+    background: var(--card) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px #10182808;
+    transition: background 0.25s, color 0.25s;
+}
+
+.stat-card {
+    padding: 22px;
+    height: 100%;
+    border-radius: 15px;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 750;
+    margin: 8px 0;
+}
+
+/* =================================
+   TEXT
+================================= */
+
+h1, h2, h3, h4, h5, h6,
+p, label, td, th {
+    color: var(--text);
+}
+
+.text-muted,
+small {
+    color: var(--muted) !important;
+}
+
+/* =================================
+   TABLES
+================================= */
+
+.table {
+    --bs-table-bg: var(--card);
+    --bs-table-color: var(--text);
+    --bs-table-border-color: var(--border);
+    --bs-table-hover-bg: var(--hover);
+    --bs-table-hover-color: var(--text);
+
+    color: var(--text);
+}
+
+.table th,
+.table td {
+    color: var(--text);
+    border-color: var(--border);
+}
+
+/* =================================
+   INPUTS AND SELECTS
+================================= */
+
+.form-control,
+.form-select {
+    background-color: var(--input-bg) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.form-control::placeholder {
+    color: var(--muted);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--input-bg) !important;
+    color: var(--text) !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 0.2rem #3b82f620;
+}
+
+/* =================================
+   LOGIN PAGE
+================================= */
+
+.auth-wrap {
+    min-height: 75vh;
+    display: grid;
+    place-items: center;
+}
+
+.auth-card {
+    width: min(100%, 460px);
+    border: 0;
+    border-radius: 18px;
+    background: var(--card) !important;
+    color: var(--text) !important;
+}
+
+/* =================================
+   BUTTONS
+================================= */
+
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* =================================
+   ALERTS
+================================= */
+
+.alert {
+    border-radius: 10px;
+}
+
+/* =================================
+   THEME TRANSITIONS
+================================= */
+
+.card,
+.stat-card,
+.sidebar,
+.table,
+.form-control,
+.form-select {
+    transition:
+        background-color 0.25s ease,
+        color 0.25s ease,
+        border-color 0.25s ease;
+}
+
+/* =================================
+   RESPONSIVE DESIGN
+================================= */
+
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+    }
+
+    main {
+        padding: 18px !important;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+}
+
+/* Dashboard analytics improvements */
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.10);
+}
+
+.card h5 {
+    letter-spacing: -0.2px;
+}
+
+.table-responsive {
+    border-radius: 10px;
+}
+
+.badge {
+    padding: 7px 10px;
+    border-radius: 7px;
+}
+
+@media (max-width: 768px) {
+    .stat-number {
+        font-size: 1.5rem;
+    }
+}

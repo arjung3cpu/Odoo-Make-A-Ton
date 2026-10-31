@@ -1,0 +1,254 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1">Subscription Management</h2>
+        <p class="text-muted mb-0">Create, search and manage customer subscriptions.</p>
+    </div>
+    <span class="badge bg-primary">
+        {{ subscriptions|length }} subscription(s) shown
+    </span>
+</div>
+
+<!-- CREATE SUBSCRIPTION -->
+<div class="card p-3 mb-4">
+    <h5 class="mb-3">Create New Subscription</h5>
+
+    <form method="post" class="row g-3">
+
+        <div class="col-md-4">
+            <label class="form-label">Customer</label>
+            <select class="form-select" name="customer_id" required>
+                <option value="">Select customer</option>
+                {% for c in customers %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Plan</label>
+            <select class="form-select" name="plan_id" required>
+                <option value="">Select plan</option>
+                {% for p in plans %}
+                    <option value="{{ p.id }}">
+                        {{ p.name }} - ₹{{ p.price }}/{{ p.frequency }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Start date</label>
+            <input class="form-control" type="date"
+                   name="start_date" value="{{ today }}" required>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Expiry date</label>
+            <input class="form-control" type="date" name="expiry_date">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Quantity</label>
+            <input class="form-control" type="number"
+                   name="quantity" min="1" value="1" required>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Variant</label>
+            <select class="form-select" name="variant_id">
+                <option value="">No variant</option>
+                {% for v in variants %}
+                    <option value="{{ v.id }}">
+                        {{ v.name }} (+₹{{ v.extra_price }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Payment terms</label>
+            <input class="form-control" name="payment_terms"
+                   value="Due on receipt">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Initial status</label>
+            <select class="form-select" name="status">
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+                <option value="quotation">Quotation</option>
+                <option value="confirmed">Confirmed</option>
+            </select>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">
+                + Create Subscription
+            </button>
+        </div>
+
+    </form>
+</div>
+
+
+<!-- SEARCH AND FILTER -->
+<div class="card p-3 mb-4">
+    <h5 class="mb-3">Find Subscriptions</h5>
+
+    <form method="get" action="{{ url_for('subscriptions') }}"
+          class="row g-2">
+
+        <div class="col-md-6">
+            <input type="text" name="search" class="form-control"
+                   placeholder="Search customer, plan or subscription ID..."
+                   value="{{ search }}">
+        </div>
+
+        <div class="col-md-4">
+            <select name="status" class="form-select">
+                <option value="">All statuses</option>
+
+                {% for st in ['draft', 'quotation', 'confirmed', 'active',
+                              'paused', 'closed', 'expired'] %}
+                    <option value="{{ st }}"
+                        {% if selected_status == st %}selected{% endif %}>
+                        {{ st|capitalize }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">
+                Search
+            </button>
+
+            <a href="{{ url_for('subscriptions') }}"
+               class="btn btn-outline-secondary">
+                Reset
+            </a>
+        </div>
+
+    </form>
+</div>
+
+
+<!-- SUBSCRIPTION TABLE -->
+<div class="card p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">All Subscriptions</h5>
+        <span class="text-muted small">
+            Latest subscriptions first
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Plan</th>
+                    <th>Quantity</th>
+                    <th>Start date</th>
+                    <th>Next billing</th>
+                    <th>Expiry</th>
+                    <th>Status</th>
+                    <th>Change status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for s in subscriptions %}
+
+                    {% set customer = customer_map.get(s.customer_id) %}
+                    {% set plan = plan_map.get(s.plan_id) %}
+
+                    <tr>
+                        <td><strong>#{{ s.id }}</strong></td>
+
+                        <td>
+                            {{ customer.name if customer else 'Unknown' }}
+                        </td>
+
+                        <td>
+                            {{ plan.name if plan else 'Unknown' }}
+                        </td>
+
+                        <td>{{ s.quantity }}</td>
+
+                        <td>{{ s.start_date or '-' }}</td>
+
+                        <td>{{ s.next_billing_date or '-' }}</td>
+
+                        <td>{{ s.expiry_date or 'No expiry' }}</td>
+
+                        <td>
+                            {% if s.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                            {% elif s.status == 'paused' %}
+                                <span class="badge bg-warning text-dark">Paused</span>
+                            {% elif s.status == 'closed' %}
+                                <span class="badge bg-danger">Closed</span>
+                            {% elif s.status == 'expired' %}
+                                <span class="badge bg-secondary">Expired</span>
+                            {% elif s.status == 'confirmed' %}
+                                <span class="badge bg-info text-dark">Confirmed</span>
+                            {% elif s.status == 'quotation' %}
+                                <span class="badge bg-primary">Quotation</span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    {{ s.status|capitalize }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <form method="post"
+                                  action="{{ url_for('subscription_status', sid=s.id) }}"
+                                  class="d-flex gap-1">
+
+                                <select class="form-select form-select-sm"
+                                        name="status">
+
+                                    {% for st in ['draft', 'quotation',
+                                                  'confirmed', 'active',
+                                                  'paused', 'closed', 'expired'] %}
+
+                                        <option value="{{ st }}"
+                                            {% if s.status == st %}selected{% endif %}>
+                                            {{ st|capitalize }}
+                                        </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-primary">
+                                    Save
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            No subscriptions found.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

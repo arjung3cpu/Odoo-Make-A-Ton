@@ -1,0 +1,249 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- WELCOME SECTION -->
+<div class="mb-4">
+    <h2 class="mb-1">Welcome back, {{ customer.name }}! 👋</h2>
+    <p class="text-muted">
+        Manage your subscriptions, invoices and payments in one place.
+    </p>
+</div>
+
+
+<!-- SUMMARY CARDS -->
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card p-3 h-100">
+            <div class="text-muted small">My subscriptions</div>
+            <h2 class="mt-2 mb-0">{{ total_subscriptions }}</h2>
+            <small class="text-success">
+                {{ active_subscriptions }} active
+            </small>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card p-3 h-100">
+            <div class="text-muted small">My invoices</div>
+            <h2 class="mt-2 mb-0">{{ invoices|length }}</h2>
+            <small class="text-muted">Total invoices</small>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card p-3 h-100">
+            <div class="text-muted small">Total paid</div>
+            <h2 class="mt-2 mb-0">₹{{ "%.2f"|format(total_paid) }}</h2>
+            <small class="text-success">Payments recorded</small>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card p-3 h-100">
+            <div class="text-muted small">Outstanding balance</div>
+            <h2 class="mt-2 mb-0">₹{{ "%.2f"|format(outstanding) }}</h2>
+            <small class="text-muted">Remaining invoice balance</small>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- SUBSCRIPTIONS -->
+<div class="card p-3 mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">My Subscriptions</h5>
+        <span class="badge bg-primary">
+            {{ total_subscriptions }} total
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Subscription</th>
+                    <th>Plan</th>
+                    <th>Quantity</th>
+                    <th>Start date</th>
+                    <th>Next billing</th>
+                    <th>Expiry</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for s in subscriptions %}
+
+                    {% set plan = plan_map.get(s.plan_id) %}
+
+                    <tr>
+                        <td><strong>#{{ s.id }}</strong></td>
+
+                        <td>
+                            {{ plan.name if plan else 'Unknown plan' }}
+                        </td>
+
+                        <td>{{ s.quantity }}</td>
+
+                        <td>{{ s.start_date or '-' }}</td>
+
+                        <td>{{ s.next_billing_date or '-' }}</td>
+
+                        <td>{{ s.expiry_date or 'No expiry' }}</td>
+
+                        <td>
+                            {% if s.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                            {% elif s.status == 'paused' %}
+                                <span class="badge bg-warning text-dark">Paused</span>
+                            {% elif s.status == 'closed' %}
+                                <span class="badge bg-danger">Closed</span>
+                            {% elif s.status == 'expired' %}
+                                <span class="badge bg-secondary">Expired</span>
+                            {% else %}
+                                <span class="badge bg-info text-dark">
+                                    {{ s.status|capitalize }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <h6>No subscriptions yet</h6>
+                            <p class="text-muted mb-0">
+                                Your subscriptions will appear here once
+                                an administrator creates one for your account.
+                            </p>
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+</div>
+
+
+<!-- INVOICES -->
+<div class="card p-3 mb-4">
+
+    <h5 class="mb-3">My Invoices</h5>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Invoice</th>
+                    <th>Subscription</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>Due date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for i in invoices %}
+
+                    {% set paid = paid_by_invoice.get(i.id, 0) %}
+                    {% set balance = [i.total - paid, 0]|max %}
+
+                    <tr>
+                        <td><strong>{{ i.invoice_number }}</strong></td>
+
+                        <td>#{{ i.subscription_id }}</td>
+
+                        <td>₹{{ "%.2f"|format(i.total) }}</td>
+
+                        <td>₹{{ "%.2f"|format(paid) }}</td>
+
+                        <td>₹{{ "%.2f"|format(balance) }}</td>
+
+                        <td>{{ i.due_date or '-' }}</td>
+
+                        <td>
+                            {% if i.status == 'paid' or balance == 0 %}
+                                <span class="badge bg-success">Paid</span>
+                            {% elif i.status == 'cancelled' %}
+                                <span class="badge bg-secondary">Cancelled</span>
+                            {% elif i.status == 'overdue' %}
+                                <span class="badge bg-danger">Overdue</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">
+                                    {{ i.status|capitalize }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            No invoices yet. Your invoices will appear here.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+</div>
+
+
+<!-- RECENT PAYMENTS -->
+<div class="card p-3 mb-4">
+
+    <h5 class="mb-3">Recent Payments</h5>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Invoice ID</th>
+                    <th>Amount</th>
+                    <th>Payment method</th>
+                    <th>Payment date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for payment in payments[:5] %}
+
+                    <tr>
+                        <td>#{{ payment.invoice_id }}</td>
+                        <td>₹{{ "%.2f"|format(payment.amount) }}</td>
+                        <td>{{ payment.method }}</td>
+                        <td>{{ payment.payment_date or '-' }}</td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="4" class="text-center py-4">
+                            No payments recorded yet.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+</div>
+
+{% endblock %}

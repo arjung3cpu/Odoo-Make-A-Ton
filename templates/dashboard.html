@@ -1,0 +1,484 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- DASHBOARD HEADER -->
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+    <div>
+        <h2 class="fw-bold mb-1">Business Overview</h2>
+        <p class="text-muted mb-0">
+            Welcome back, {{ me.name }}. Here's your business performance.
+        </p>
+    </div>
+
+    <form method="post" action="{{ url_for('generate_invoices') }}">
+        <button class="btn btn-primary">
+            ⚡ Generate Due Invoices
+        </button>
+    </form>
+
+</div>
+
+
+<!-- KPI CARDS -->
+
+<div class="row g-3 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">Total Revenue</span>
+                <span>💰</span>
+            </div>
+            <div class="stat-number">
+                ₹{{ "%.2f"|format(revenue) }}
+            </div>
+            <small class="text-muted">Total payments received</small>
+        </div>
+    </div>
+
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">Monthly Recurring Revenue</span>
+                <span>🔄</span>
+            </div>
+            <div class="stat-number">
+                ₹{{ "%.2f"|format(mrr) }}
+            </div>
+            <small class="text-muted">Estimated monthly recurring value</small>
+        </div>
+    </div>
+
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">Active Subscriptions</span>
+                <span>📦</span>
+            </div>
+            <div class="stat-number">
+                {{ active }}
+            </div>
+            <small class="text-muted">
+                Out of {{ total_subscriptions }} total subscriptions
+            </small>
+        </div>
+    </div>
+
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <span class="text-muted">Outstanding Balance</span>
+                <span>⏳</span>
+            </div>
+            <div class="stat-number">
+                ₹{{ "%.2f"|format(outstanding) }}
+            </div>
+            <small class="text-muted">
+                {{ overdue_count }} overdue invoices
+            </small>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- CHARTS -->
+
+<div class="row g-3 mb-4">
+
+    <!-- REVENUE CHART -->
+
+    <div class="col-lg-8">
+
+        <div class="card p-3 h-100">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <div>
+                    <h5 class="fw-bold mb-1">Revenue Analytics</h5>
+                    <small class="text-muted">
+                        Monthly payments received over the last 6 months
+                    </small>
+                </div>
+
+                <span class="badge bg-primary">6 Months</span>
+
+            </div>
+
+            <div style="height:300px; position:relative;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- SUBSCRIPTION CHART -->
+
+    <div class="col-lg-4">
+
+        <div class="card p-3 h-100">
+
+            <h5 class="fw-bold mb-1">Subscription Status</h5>
+
+            <small class="text-muted">
+                Current subscription breakdown
+            </small>
+
+            <div style="height:250px; position:relative;" class="mt-3">
+                <canvas id="subscriptionChart"></canvas>
+            </div>
+
+            <div class="mt-3 text-center">
+                <strong>{{ total_subscriptions }}</strong>
+                <small class="text-muted">Total subscriptions</small>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- PAYMENT OVERVIEW -->
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <small class="text-muted">Paid Invoices</small>
+            <h3 class="fw-bold mt-2">{{ paid_count }}</h3>
+            <span class="text-success">Fully paid</span>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <small class="text-muted">Unpaid / Partially Paid</small>
+            <h3 class="fw-bold mt-2">{{ unpaid_count }}</h3>
+            <span class="text-warning">Awaiting payment</span>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <small class="text-muted">Total Customers</small>
+            <h3 class="fw-bold mt-2">{{ total_customers }}</h3>
+            <span class="text-primary">Registered customers</span>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- RECENT TRANSACTIONS -->
+
+<div class="card p-3 mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div>
+            <h5 class="fw-bold mb-1">Recent Transactions</h5>
+            <small class="text-muted">
+                Latest recorded payments
+            </small>
+        </div>
+
+        <a href="{{ url_for('payments') }}"
+           class="btn btn-sm btn-outline-primary">
+            View all
+        </a>
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Invoice</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for p in recent_transactions %}
+
+                <tr>
+                    <td>{{ p.invoice }}</td>
+                    <td>{{ p.customer }}</td>
+                    <td class="fw-bold">
+                        ₹{{ "%.2f"|format(p.amount) }}
+                    </td>
+                    <td>{{ p.method }}</td>
+                    <td>{{ p.date }}</td>
+                </tr>
+
+                {% else %}
+
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No transactions recorded yet.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- RECENT INVOICES -->
+
+<div class="card p-3 mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h5 class="fw-bold mb-0">Recent Invoices</h5>
+
+        <a href="{{ url_for('invoices') }}"
+           class="btn btn-sm btn-outline-primary">
+            View all
+        </a>
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Invoice Number</th>
+                    <th>Subscription</th>
+                    <th>Total</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for i in invoices %}
+
+                <tr>
+                    <td>{{ i.invoice_number }}</td>
+                    <td>#{{ i.subscription_id }}</td>
+                    <td>₹{{ "%.2f"|format(i.total) }}</td>
+                    <td>{{ i.due_date or "Not set" }}</td>
+
+                    <td>
+                        {% if i.status == "paid" %}
+                            <span class="badge text-bg-success">Paid</span>
+                        {% elif i.status == "cancelled" %}
+                            <span class="badge text-bg-secondary">Cancelled</span>
+                        {% else %}
+                            <span class="badge text-bg-warning">{{ i.status|capitalize }}</span>
+                        {% endif %}
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No invoices generated yet.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- CHART.JS -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Revenue chart data from Flask
+
+    const monthLabels = {{ month_labels | tojson }};
+    const revenueValues = {{ monthly_revenue | tojson }};
+
+    // Detect current theme
+
+    const isDark =
+        document.documentElement.getAttribute("data-theme") === "dark";
+
+    const textColor = isDark ? "#e5e7eb" : "#475569";
+    const gridColor = isDark ? "#29364b" : "#e7eaf0";
+
+
+    // REVENUE LINE CHART
+
+    const revenueCanvas = document.getElementById("revenueChart");
+
+    if (revenueCanvas) {
+
+        new Chart(revenueCanvas, {
+
+            type: "line",
+
+            data: {
+                labels: monthLabels,
+
+                datasets: [{
+                    label: "Revenue (₹)",
+                    data: revenueValues,
+
+                    borderColor: "#3b82f6",
+                    backgroundColor: "rgba(59,130,246,0.15)",
+
+                    fill: true,
+                    tension: 0.4,
+
+                    pointRadius: 4,
+                    pointHoverRadius: 7
+                }]
+            },
+
+            options: {
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: textColor
+                        }
+                    }
+                },
+
+                scales: {
+
+                    x: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
+
+                    y: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            color: textColor,
+                            callback: function(value) {
+                                return "₹" + value;
+                            }
+                        },
+
+                        grid: {
+                            color: gridColor
+                        }
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // SUBSCRIPTION DOUGHNUT CHART
+
+    const statusLabels = {{ status_labels | tojson }};
+    const statusValues = {{ status_values | tojson }};
+
+    const statusCanvas =
+        document.getElementById("subscriptionChart");
+
+    if (statusCanvas) {
+
+        new Chart(statusCanvas, {
+
+            type: "doughnut",
+
+            data: {
+
+                labels: statusLabels,
+
+                datasets: [{
+                    data: statusValues,
+
+                    backgroundColor: [
+                        "#22c55e",
+                        "#f59e0b",
+                        "#64748b",
+                        "#3b82f6",
+                        "#8b5cf6",
+                        "#ef4444",
+                        "#94a3b8"
+                    ],
+
+                    borderWidth: 0
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+                        position: "bottom",
+
+                        labels: {
+                            color: textColor,
+                            padding: 12
+                        }
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+});
+
+</script>
+
+{% endblock %}
