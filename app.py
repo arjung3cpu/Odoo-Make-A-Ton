@@ -852,7 +852,7 @@ def not_found(e): return render_template("message.html", title="Not found", mess
 
 def seed_demo():
     if User.query.count()==0:
-        db.session.add(User(name="Demo Admin",email="admin@subscript.local",password_hash=generate_password_hash("Admin@12345"),role="admin"))    
+        db.session.add(User(name="Demo Admin",email="admin@subscript.local",password_hash=generate_password_hash("Admin@12345"),role="admin"))
         db.session.commit()
     if os.getenv("SEED_DEMO","1")=="1" and Product.query.count()==0:
         c=Customer(name="Rahul Sharma",email="rahul@example.com",company="Rahul Traders",phone="9876543210")
